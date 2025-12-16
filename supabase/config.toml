@@ -1,0 +1,7 @@
+project_id = "xmzrrtxscaybjgqoonvk"
+
+[functions.verify-doctor]
+verify_jwt = false
+
+[functions.search-legal-processes]
+verify_jwt = false
