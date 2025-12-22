@@ -25,13 +25,13 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#005F6A", // Azul Petróleo (Sério/Hospitalar)
+          DEFAULT: "#084E89", // Azul Petróleo (Sério/Hospitalar)
           foreground: "#ffffff",
-          dark: "#003B46", // Tom mais escuro para hover
+          dark: "#084E89, // Tom mais escuro para hover
         },
         secondary: {
           DEFAULT: "#f0f9fa", // Um azul muito claro (quase branco) para fundos
-          foreground: "#005F6A",
+          foreground: "#084E89",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -43,7 +43,7 @@ export default {
         },
         accent: {
           DEFAULT: "#E0F2F1",
-          foreground: "#005F6A",
+          foreground: "#084E89",
         },
       },
       borderRadius: {
