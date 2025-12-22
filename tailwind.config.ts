@@ -27,7 +27,7 @@ export default {
         primary: {
           DEFAULT: "#084E89", // Azul Petróleo (Sério/Hospitalar)
           foreground: "#ffffff",
-          dark: "#084E89, // Tom mais escuro para hover
+          dark: "#084E89", // Tom mais escuro para hover,
         },
         secondary: {
           DEFAULT: "#f0f9fa", // Um azul muito claro (quase branco) para fundos
