@@ -74,7 +74,7 @@ serve(async (req) => {
       }
     })
 
-    // Devolve o link do Stripe para o site abrir
+    // Devolssve o link do Stripe para o site abrir
     return new Response(
       JSON.stringify({ url: session.url }),
       { 
