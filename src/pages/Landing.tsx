@@ -1,27 +1,60 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, ShieldCheck, User, Stethoscope } from "lucide-react";
+import { Check, ShieldCheck, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client"; // Importação do Supabase
+import { useState } from "react"; // Estado para loading
 
 const Landing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false); // Estado para controlar o clique
 
-  // Função simulada para o checkout do Stripe
-  const handleCheckout = (planType: 'single' | 'subscription') => {
-    // AQUI: Você deve chamar sua função do Supabase/Stripe
-    // Exemplo: supabase.functions.invoke('create-checkout', { body: { plan: planType } })
-    
-    console.log(`Iniciando checkout para plano: ${planType}`);
-    
-    // Por enquanto, vou redirecionar para o registro do paciente, 
-    // pois você disse que é obrigatório criar conta antes.
-    toast({
-      title: "Redirecionando",
-      description: "Crie sua conta de paciente para continuar o pagamento.",
-    });
-    navigate("/register?plan=" + planType);
+  // Função REAL conectada ao Stripe
+  const handleCheckout = async (planType: 'single' | 'subscription') => {
+    try {
+      setLoading(true);
+      
+      // 1. Verificar se o usuário está logado
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Se não estiver logado, manda para o Login (ou registro)
+      if (!session) {
+        toast({
+          title: "Login necessário",
+          description: "Crie sua conta ou faça login para continuar o pagamento.",
+        });
+        // Redireciona para o login passando o plano na URL para processar depois
+        navigate(`/login?plan=${planType}`); 
+        return;
+      }
+
+      // 2. Chamar a Edge Function do Supabase (que cria o link do Stripe)
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          planType,
+          userId: session.user.id,
+          returnUrl: window.location.origin // Manda a URL atual para retorno após pagamento
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.url) throw new Error("Link de pagamento não gerado");
+
+      // 3. Redirecionar o usuário para o Checkout do Stripe
+      window.location.href = data.url;
+
+    } catch (error: any) {
+      console.error("Erro no checkout:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao iniciar pagamento",
+        description: error.message || "Tente novamente mais tarde.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,7 +62,7 @@ const Landing = () => {
       {/* Header Institucional */}
       <header className="border-b border-gray-100 py-4 px-6 flex justify-between items-center bg-white sticky top-0 z-50">
         
-        {/* Logo + Nome (Azul Petróleo) */}
+        {/* Logo + Nome */}
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
           <img 
             src="/favicon.ico" 
@@ -54,7 +87,7 @@ const Landing = () => {
           <Button 
             variant="outline" 
             className="border-primary text-primary hover:bg-primary hover:text-white transition-colors gap-2"
-            onClick={() => navigate("/login?type=doctor")} // Rota para login de médico
+            onClick={() => navigate("/login?type=doctor")}
           >
             <Stethoscope className="w-4 h-4" />
             Sou Médico
@@ -62,7 +95,7 @@ const Landing = () => {
         </nav>
       </header>
 
-      {/* Hero Section - Limpo e Sério */}
+      {/* Hero Section */}
       <main className="flex-1 container mx-auto px-4 py-20">
         <div className="text-center mb-20 space-y-6">
           <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary mb-4">
@@ -111,13 +144,14 @@ const Landing = () => {
               <Button 
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
                 onClick={() => handleCheckout('single')}
+                disabled={loading} // Desabilita se estiver carregando
               >
-                Consultar Agora
+                {loading ? "Processando..." : "Consultar Agora"}
               </Button>
             </CardFooter>
           </Card>
 
-          {/* Opção 2: Assinatura Mensal (Destaque) */}
+          {/* Opção 2: Assinatura Mensal */}
           <Card className="relative overflow-hidden border-primary border-2 shadow-xl bg-white">
             <div className="absolute top-0 right-0 bg-primary text-white px-4 py-1 text-xs font-bold rounded-bl-lg uppercase tracking-wider">
               Mais Popular
@@ -127,8 +161,9 @@ const Landing = () => {
               <CardDescription>Para pacientes recorrentes ou famílias.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* CORRIGIDO PREÇO PARA 49,90 */}
               <div className="text-4xl font-bold text-primary">
-                R$ 29,90 
+                R$ 49,90 
                 <span className="text-sm font-normal text-slate-500 ml-2">/mês</span>
               </div>
               <ul className="space-y-3 text-sm text-slate-600">
@@ -154,8 +189,9 @@ const Landing = () => {
               <Button 
                 className="w-full bg-primary hover:bg-primary-dark text-white shadow-lg shadow-primary/20"
                 onClick={() => handleCheckout('subscription')}
+                disabled={loading} // Desabilita se estiver carregando
               >
-                Assinar Plano Mensal
+                {loading ? "Processando..." : "Assinar Plano Mensal"}
               </Button>
             </CardFooter>
           </Card>
