@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard"; // O antigo Index.tsx renomeado
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import AuthCallback from "./pages/AuthCallback"; // <--- Importou aqui?
 
 const queryClient = new QueryClient();
 
